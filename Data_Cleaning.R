@@ -1,8 +1,8 @@
-install.packages("BiocManager")
-BiocManager::install("GEOquery")
-BiocManager::install("readxl")
-BiocManager::install("httr")
-BiocManager::install("stringr")
+#install.packages("BiocManager")
+#BiocManager::install("GEOquery")
+#BiocManager::install("readxl")
+#BiocManager::install("httr")
+#BiocManager::install("stringr")
 
 
 #Load the required packages
