@@ -85,28 +85,33 @@ write.csv(methylation_data,file = paste0("Filtered_Methylation_Datasets.csv"))
 #GSE213478 - Sex in numericals and age in groups - lower age saved - deidentified data
 
 #Code to download a particular dataset manually
-GSE <- methylation_data$`Accession Number`[k]
+GSE <- "GSE42861"
 dir.create(GSE)
-url <- methylation_data$`ftp link`[methylation_data$`Accession Number` == GSE]
+url <- methylation_data$`ftp link`[methylation_data$`Accession Number` == GSE][1]
 dest <- paste0(getwd(),"/",GSE,"/matrix.txt.gz")
 download.file(url,dest)
 file <- paste0(GSE,"/matrix.txt.gz")
 gse <- getGEO(filename = file,GSEMatrix=TRUE)
 write.csv(gse@phenoData@data,file = paste0(GSE,"/","metadata.csv"))
+write.csv(gse@assayData[["exprs"]],file = paste0(GSE,"/","methylation_data.csv"))
 
-
-#Cleaning each dataset manually
+# Cleaning each dataset manually
 #Saving the row number of a particular dataset to read the information for cleaning
-k <- 40
-
+# k <- 40
+GSE <- paste0("GSE","42861")
 #Read the data
-data <- read.csv(paste0(methylation_data$`Accession Number`[k],'/metadata.csv'))
+# data <- read.csv(paste0(methylation_data$`Accession Number`[k],'/metadata.csv'))
+data <- read.csv(paste0(GSE,'/metadata.csv'))
+cleaned_data <- read.csv(paste0(GSE,'/cleaned_metadata.csv'))
 
 #Extract the sample_id and age
-cleaned_data <- data.frame(data$X,data$characteristics_ch1.4)
+cleaned_data <- data.frame(data$geo_accession,data$characteristics_ch1.14,data$type,data$tissue.ch1)
 
 #Assign column names
-colnames(cleaned_data) <- c("sample_id","age")
+colnames(cleaned_data) <- c("sample_id","age","type","tissue")
+
+#View sample data
+head(cleaned_data)
 
 #Extract only numerical values for age
 for(i in 1:nrow(cleaned_data)){
@@ -116,23 +121,23 @@ for(i in 1:nrow(cleaned_data)){
 }
 
 #Extract gender data
-cleaned_data$gender <- data$characteristics_ch1.3
+cleaned_data$gender <- data$characteristics_ch1.1
 
 #Clean the gender data for uniformity
 for(i in 1:nrow(cleaned_data)){
   value <- cleaned_data$gender[i]
-  value <- sub("Sex: ", "", value)
-  #cleaned_data$gender[i] <- tolower(value)
-  if(tolower(value) == "m"){
-    cleaned_data$gender[i] <- "male"
-  }else if (tolower(value) == "f"){
-    cleaned_data$gender[i] <- "female"
-  }
+  value <- sub("gender: ", "", value)
+  cleaned_data$gender[i] <- tolower(value)
+  # if(tolower(value) == "m"){
+  #   cleaned_data$gender[i] <- "male"
+  # }else if (tolower(value) == "f"){
+  #   cleaned_data$gender[i] <- "female"
+  # }
 }
 
 #Change unknown values to NA in any column
 for(i in 1:nrow(cleaned_data)){
-  if(cleaned_data$gender[i] == "unknown"){
+  if(cleaned_data$gender[i] == "na"){
     cleaned_data$gender[i] <- NA
   }
 }
@@ -141,22 +146,23 @@ for(i in 1:nrow(cleaned_data)){
 cleaned_data$type <- data$type
 
 #Extract the disease_state data
-cleaned_data$disease_state <- data$characteristics_ch1
+cleaned_data$disease_state <- data$characteristics_ch1.4
 
 #Clean the disease_state data
 for(i in 1:nrow(cleaned_data)){
   value <- cleaned_data$disease_state[i]
-  value <- sub("diagnosis: ", "", value)
+  #value <- sub("disease state: ", "", value)
+  value <- gsub(".*?;","",value)
   cleaned_data$disease_state[i] <- value
 }
 
-#Write the cleaned data to a csv file
-write.csv(cleaned_data,file = paste0(methylation_data$`Accession Number`[k],"/","cleaned_metadata.csv"),row.names = FALSE)
-
-
-#Add additional variables to the cleaned data
-#Read the data
-cleaned_data <- read.csv(paste0(methylation_data$`Accession Number`[k],'/cleaned_metadata.csv'))
+# #Write the cleaned data to a csv file
+# write.csv(cleaned_data,file = paste0(methylation_data$`Accession Number`[k],"/","cleaned_metadata.csv"),row.names = FALSE)
+# 
+# 
+# #Add additional variables to the cleaned data
+# #Read the data
+# cleaned_data <- read.csv(paste0(methylation_data$`Accession Number`[k],'/cleaned_metadata.csv'))
 
 cleaned_data$treatment_condition <- data$characteristics_ch1.2
 
@@ -189,8 +195,29 @@ for(i in 1:nrow(cleaned_data)){
 #Remove unwanted columns
 cleaned_data$disease_state <- NULL
 
+
+
+cleaned_data$tissue <- data$characteristics_ch1.3
+
+#Add treatment details
+for(i in 1:nrow(cleaned_data)){
+  value <- cleaned_data$tissue[i]
+  value <- sub("tissue: ", "", value)
+  cleaned_data$tissue[i] <- tolower(value)
+  # if(tolower(value) == "no"){
+  #   cleaned_data$treatment_details[i] <- "control"
+  # }else {
+  #   cleaned_data$treatment_details[i] <- "t2d medication"
+  # }
+}
+
+
+
 #Write the cleaned data to a csv file
-write.csv(cleaned_data,file = paste0(methylation_data$`Accession Number`[k],"/","cleaned_metadata.csv"),row.names = FALSE)
+# write.csv(cleaned_data,file = paste0(methylation_data$`Accession Number`[k],"/","cleaned_metadata.csv"),row.names = FALSE)
+#Write the cleaned data to a csv file
+write.csv(cleaned_data,file = paste0(GSE,"/","cleaned_metadata.csv"),row.names = FALSE)
 
+g <- getGEOSuppFiles("GSE185445")
 
-print(methylation_data)
+print(methylation_data,n=100)
