@@ -1,3 +1,4 @@
+#Load required libraries
 library(readxl)
 library(httr)
 library(stringr)
@@ -6,6 +7,7 @@ library(dplyr)
 library(readxl)
 
 
+#Function to collect all the unique CpG sites
 Collect_CpG_sites <- function(){
   
   print("Collecting dataset information")
@@ -56,6 +58,7 @@ Collect_CpG_sites <- function(){
 }
 
 
+#Function to group CpG sites into different clusters
 Cluster_CpG_sites <- function(CpG_sites){
   
   n = 100000
@@ -94,6 +97,7 @@ Cluster_CpG_sites <- function(CpG_sites){
 }
 
 
+#Function to calculate correlation between Beta values of CpG sites and age
 Find_correlation <- function(Clustered_CpG_sites){
   
   print("Collecting dataset information")
@@ -210,6 +214,7 @@ for (j in 1:ncol(Clustered_CpG_sites)){
 }
 
 
+##Main
 
 all_CpG_sites <- Collect_CpG_sites()
 
